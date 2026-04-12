@@ -1,0 +1,458 @@
+"use client"
+
+import { useState, useMemo } from "react"
+import {
+  Search, Plus, Globe, Users, MapPin, PhoneCall,
+  Eye, Pencil, Archive, ChevronDown, X,
+} from "lucide-react"
+import {
+  Lead, LeadStatus, LeadSource,
+  STATUS_CONFIG, SERVICE_COLORS, SOURCE_LABELS,
+  SAMPLE_LEADS,
+} from "./leads-data"
+
+// ── Source icons ─────────────────────────────────────────────────
+const SourceIcon = ({ source }: { source: LeadSource }) => {
+  const props = { size: 12, style: { color: "rgba(212,216,224,0.5)" } }
+  if (source === "website")    return <Globe    {...props} />
+  if (source === "referral")   return <Users    {...props} />
+  if (source === "door-knock") return <MapPin   {...props} />
+  return                              <PhoneCall {...props} />
+}
+
+// ── Job size dots ────────────────────────────────────────────────
+const JOB_SIZE_COLOR: Record<string, string> = {
+  "$":   "rgba(212,216,224,0.4)",
+  "$$":  "#FFB800",
+  "$$$": "#39FF14",
+}
+
+interface LeadsTableProps {
+  leads?: Lead[]
+  onViewLead: (lead: Lead) => void
+  onAddLead: () => void
+  currency?: string
+}
+
+const ALL_STATUSES: LeadStatus[] = ["New", "Contacted", "Estimate", "Converted", "Lost"]
+const ALL_SOURCES: LeadSource[]  = ["website", "referral", "door-knock", "call-in"]
+
+export default function LeadsTable({
+  leads = SAMPLE_LEADS,
+  onViewLead,
+  onAddLead,
+  currency = "USD",
+}: LeadsTableProps) {
+  const [search, setSearch]         = useState("")
+  const [statusFilter, setStatus]   = useState<LeadStatus | "All">("All")
+  const [sourceFilter, setSource]   = useState<LeadSource | "All">("All")
+  const [serviceFilter, setService] = useState("All")
+  const [copied, setCopied]         = useState<number | null>(null)
+
+  const services = useMemo(() => Array.from(new Set(leads.map((l) => l.service))), [leads])
+
+  const fmt = (n: number) =>
+    new Intl.NumberFormat("en-US", { style: "currency", currency, maximumFractionDigits: 0 }).format(n)
+
+  const filtered = useMemo(() => {
+    return leads.filter((l) => {
+      const q = search.toLowerCase()
+      const matchSearch =
+        l.name.toLowerCase().includes(q) ||
+        l.city.toLowerCase().includes(q) ||
+        l.phone.includes(q) ||
+        l.service.toLowerCase().includes(q)
+      const matchStatus  = statusFilter  === "All" || l.status  === statusFilter
+      const matchSource  = sourceFilter  === "All" || l.source  === sourceFilter
+      const matchService = serviceFilter === "All" || l.service === serviceFilter
+      return matchSearch && matchStatus && matchSource && matchService
+    })
+  }, [leads, search, statusFilter, sourceFilter, serviceFilter])
+
+  const copyPhone = (lead: Lead) => {
+    navigator.clipboard.writeText(lead.phone).catch(() => {})
+    setCopied(lead.id)
+    setTimeout(() => setCopied(null), 1500)
+  }
+
+  const hasFilters = statusFilter !== "All" || sourceFilter !== "All" || serviceFilter !== "All" || search !== ""
+
+  return (
+    <div className="flex flex-col gap-4">
+
+      {/* ── Toolbar ───────────────────────────────────────────── */}
+      <div className="flex flex-wrap items-center gap-3">
+        {/* Search */}
+        <label
+          className="flex items-center gap-2 px-3 h-9 rounded-lg flex-1 min-w-[200px]"
+          style={{
+            background: "rgba(255,255,255,0.04)",
+            border: "1px solid rgba(255,255,255,0.08)",
+          }}
+        >
+          <Search size={13} style={{ color: "rgba(212,216,224,0.35)", flexShrink: 0 }} />
+          <input
+            type="text"
+            placeholder="Search name, city, phone, service…"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="bg-transparent outline-none w-full text-xs font-mono"
+            style={{ color: "#d4d8e0" }}
+            aria-label="Search leads"
+          />
+          {search && (
+            <button onClick={() => setSearch("")} aria-label="Clear search">
+              <X size={11} style={{ color: "rgba(212,216,224,0.4)" }} />
+            </button>
+          )}
+        </label>
+
+        {/* Filter chips */}
+        <FilterSelect
+          label="Status"
+          value={statusFilter}
+          onChange={(v) => setStatus(v as LeadStatus | "All")}
+          options={["All", ...ALL_STATUSES]}
+        />
+        <FilterSelect
+          label="Service"
+          value={serviceFilter}
+          onChange={setService}
+          options={["All", ...services]}
+        />
+        <FilterSelect
+          label="Source"
+          value={sourceFilter}
+          onChange={(v) => setSource(v as LeadSource | "All")}
+          options={["All", ...ALL_SOURCES]}
+          labelMap={SOURCE_LABELS as Record<string, string>}
+        />
+
+        {hasFilters && (
+          <button
+            onClick={() => { setSearch(""); setStatus("All"); setSource("All"); setService("All") }}
+            className="text-xs font-mono h-9 px-3 rounded-lg flex items-center gap-1.5"
+            style={{ color: "#ff4455", border: "1px solid rgba(255,68,85,0.2)", background: "rgba(255,68,85,0.05)" }}
+          >
+            <X size={11} /> Clear
+          </button>
+        )}
+
+        <div className="text-xs font-mono ml-auto" style={{ color: "rgba(212,216,224,0.35)" }}>
+          {filtered.length} lead{filtered.length !== 1 ? "s" : ""}
+        </div>
+
+        {/* Add New Lead CTA */}
+        <button
+          onClick={onAddLead}
+          className="flex items-center gap-2 h-9 px-4 rounded-lg text-xs font-semibold font-sans"
+          style={{
+            background: "rgba(0,245,255,0.12)",
+            border: "1px solid rgba(0,245,255,0.35)",
+            color: "#00F5FF",
+            boxShadow: "0 0 14px rgba(0,245,255,0.18)",
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.background = "rgba(0,245,255,0.18)"
+            e.currentTarget.style.boxShadow  = "0 0 22px rgba(0,245,255,0.3)"
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.background = "rgba(0,245,255,0.12)"
+            e.currentTarget.style.boxShadow  = "0 0 14px rgba(0,245,255,0.18)"
+          }}
+        >
+          <Plus size={14} />
+          Add New Lead
+        </button>
+      </div>
+
+      {/* ── Table panel ───────────────────────────────────────── */}
+      <div
+        className="glass-card rounded-xl overflow-hidden"
+        style={{ boxShadow: "0 4px 40px rgba(0,0,0,0.7), inset 0 1px 0 rgba(255,255,255,0.04)" }}
+      >
+        <div className="overflow-x-auto">
+          <table className="w-full text-xs font-sans" style={{ borderCollapse: "separate", borderSpacing: 0 }}>
+            <thead>
+              <tr style={{ background: "rgba(255,255,255,0.025)", borderBottom: "1px solid rgba(255,255,255,0.06)" }}>
+                {["#", "Lead", "Phone", "Service", "Source", "Size", "Date", "Status", ""].map((h, i) => (
+                  <th
+                    key={i}
+                    className="px-4 py-3 text-left font-medium"
+                    style={{ color: "rgba(212,216,224,0.38)", whiteSpace: "nowrap" }}
+                  >
+                    {h}
+                  </th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {filtered.length === 0 ? (
+                <EmptyState hasSearch={hasFilters} onAdd={onAddLead} />
+              ) : (
+                filtered.map((lead, idx) => (
+                  <LeadRow
+                    key={lead.id}
+                    lead={lead}
+                    idx={idx + 1}
+                    fmt={fmt}
+                    copied={copied}
+                    onCopy={copyPhone}
+                    onView={onViewLead}
+                  />
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+// ── Sub-components ───────────────────────────────────────────────
+
+function FilterSelect({
+  label, value, onChange, options, labelMap,
+}: {
+  label: string
+  value: string
+  onChange: (v: string) => void
+  options: string[]
+  labelMap?: Record<string, string>
+}) {
+  const isActive = value !== "All"
+  return (
+    <div
+      className="relative flex items-center gap-1.5 px-3 h-9 rounded-lg cursor-pointer"
+      style={{
+        background: isActive ? "rgba(0,245,255,0.08)" : "rgba(255,255,255,0.04)",
+        border: `1px solid ${isActive ? "rgba(0,245,255,0.3)" : "rgba(255,255,255,0.08)"}`,
+        color: isActive ? "#00F5FF" : "rgba(212,216,224,0.5)",
+      }}
+    >
+      <span className="text-xs font-mono whitespace-nowrap">
+        {value === "All" ? label : (labelMap?.[value] ?? value)}
+      </span>
+      <ChevronDown size={11} />
+      <select
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        className="absolute inset-0 w-full opacity-0 cursor-pointer"
+        aria-label={`Filter by ${label}`}
+      >
+        {options.map((o) => (
+          <option key={o} value={o}>{labelMap?.[o] ?? o}</option>
+        ))}
+      </select>
+    </div>
+  )
+}
+
+function LeadRow({
+  lead, idx, fmt, copied, onCopy, onView,
+}: {
+  lead: Lead
+  idx: number
+  fmt: (n: number) => string
+  copied: number | null
+  onCopy: (l: Lead) => void
+  onView: (l: Lead) => void
+}) {
+  const sc = STATUS_CONFIG[lead.status]
+  const svc = SERVICE_COLORS[lead.service] ?? "#00F5FF"
+
+  return (
+    <tr
+      className="table-row-hover group"
+      style={{ borderBottom: "1px solid rgba(255,255,255,0.04)", cursor: "pointer" }}
+      onClick={() => onView(lead)}
+    >
+      {/* Scan line overlay */}
+      <td className="relative" style={{ width: 0, padding: 0 }}>
+        <div className="scan-line" />
+      </td>
+
+      {/* # */}
+      <td
+        className="px-4 py-3 font-mono font-medium"
+        style={{ color: "rgba(212,216,224,0.25)", width: 40 }}
+        onClick={(e) => e.stopPropagation()}
+      >
+        {idx}
+      </td>
+
+      {/* Lead name + city */}
+      <td className="px-4 py-3" style={{ minWidth: 160 }}>
+        <div className="font-semibold font-sans" style={{ color: "#d4d8e0" }}>{lead.name}</div>
+        <div
+          className="text-xs font-mono mt-0.5 inline-flex items-center gap-1 px-1.5 py-0.5 rounded"
+          style={{ background: "rgba(255,255,255,0.04)", color: "rgba(212,216,224,0.4)" }}
+        >
+          <MapPin size={9} />
+          {lead.city}
+        </div>
+      </td>
+
+      {/* Phone — click to copy */}
+      <td
+        className="px-4 py-3 font-mono"
+        style={{ color: "rgba(212,216,224,0.5)", minWidth: 130 }}
+        onClick={(e) => { e.stopPropagation(); onCopy(lead) }}
+        title="Click to copy"
+      >
+        <span
+          className="cursor-pointer hover:underline"
+          style={{ color: copied === lead.id ? "#39FF14" : "rgba(212,216,224,0.5)" }}
+        >
+          {copied === lead.id ? "Copied!" : lead.phone}
+        </span>
+      </td>
+
+      {/* Service */}
+      <td className="px-4 py-3" style={{ minWidth: 130 }}>
+        <span
+          className="inline-block px-2 py-0.5 rounded-md text-xs font-mono badge-3d"
+          style={{
+            background: `${svc}14`,
+            border: `1px solid ${svc}30`,
+            color: svc,
+          }}
+        >
+          {lead.service}
+        </span>
+      </td>
+
+      {/* Source */}
+      <td className="px-4 py-3">
+        <div
+          className="flex items-center gap-1.5 text-xs font-mono"
+          style={{ color: "rgba(212,216,224,0.45)" }}
+          title={SOURCE_LABELS[lead.source]}
+        >
+          <SourceIcon source={lead.source} />
+          <span className="hidden sm:inline">{SOURCE_LABELS[lead.source]}</span>
+        </div>
+      </td>
+
+      {/* Job size */}
+      <td className="px-4 py-3 font-mono font-bold" style={{ color: JOB_SIZE_COLOR[lead.jobSize], width: 48 }}>
+        {lead.jobSize}
+      </td>
+
+      {/* Date */}
+      <td
+        className="px-4 py-3 font-mono whitespace-nowrap"
+        style={{ color: "rgba(212,216,224,0.3)", width: 110 }}
+      >
+        {lead.dateAdded}
+      </td>
+
+      {/* Status */}
+      <td className="px-4 py-3">
+        <span
+          className={`${sc.badge} badge-3d inline-block px-2 py-0.5 rounded-full text-xs`}
+        >
+          {sc.label}
+        </span>
+      </td>
+
+      {/* Actions */}
+      <td
+        className="px-4 py-3"
+        onClick={(e) => e.stopPropagation()}
+        style={{ width: 100 }}
+      >
+        <div
+          className="flex items-center gap-1.5 opacity-0 group-hover:opacity-100"
+          style={{ transition: "opacity 0.15s ease" }}
+        >
+          <ActionBtn color="#00F5FF" label="View"    onClick={() => onView(lead)}>
+            <Eye size={12} />
+          </ActionBtn>
+          <ActionBtn color="#9B59FF" label="Edit"    onClick={() => onView(lead)}>
+            <Pencil size={12} />
+          </ActionBtn>
+          <ActionBtn color="rgba(212,216,224,0.3)" label="Archive" onClick={() => {}}>
+            <Archive size={12} />
+          </ActionBtn>
+        </div>
+      </td>
+    </tr>
+  )
+}
+
+function ActionBtn({
+  color, label, onClick, children,
+}: {
+  color: string; label: string; onClick: () => void; children: React.ReactNode
+}) {
+  return (
+    <button
+      title={label}
+      aria-label={label}
+      onClick={onClick}
+      className="w-7 h-7 rounded-md flex items-center justify-center"
+      style={{
+        background: `${color}12`,
+        border: `1px solid ${color}28`,
+        color,
+        transition: "background 0.15s ease, box-shadow 0.15s ease",
+      }}
+      onMouseEnter={(e) => {
+        e.currentTarget.style.background  = `${color}22`
+        e.currentTarget.style.boxShadow   = `0 0 8px ${color}44`
+      }}
+      onMouseLeave={(e) => {
+        e.currentTarget.style.background  = `${color}12`
+        e.currentTarget.style.boxShadow   = "none"
+      }}
+    >
+      {children}
+    </button>
+  )
+}
+
+function EmptyState({ hasSearch, onAdd }: { hasSearch: boolean; onAdd: () => void }) {
+  return (
+    <tr>
+      <td colSpan={9}>
+        <div className="flex flex-col items-center justify-center gap-4 py-20">
+          {/* Animated rotating magnifying glass */}
+          <div
+            style={{
+              animation: "spin 4s linear infinite",
+              color: "rgba(0,245,255,0.35)",
+              filter: "drop-shadow(0 0 8px rgba(0,245,255,0.2))",
+            }}
+          >
+            <Search size={40} strokeWidth={1.2} />
+          </div>
+          <div className="text-center">
+            <p className="text-sm font-semibold font-sans" style={{ color: "rgba(212,216,224,0.6)" }}>
+              {hasSearch ? "No leads found" : "No leads yet"}
+            </p>
+            <p className="text-xs font-mono mt-1" style={{ color: "rgba(212,216,224,0.3)" }}>
+              {hasSearch ? "Try adjusting your filters or search query." : "Add your first lead to get started."}
+            </p>
+          </div>
+          {!hasSearch && (
+            <button
+              onClick={onAdd}
+              className="flex items-center gap-2 h-9 px-5 rounded-lg text-xs font-semibold font-sans mt-1"
+              style={{
+                background: "rgba(0,245,255,0.10)",
+                border: "1px solid rgba(0,245,255,0.3)",
+                color: "#00F5FF",
+                boxShadow: "0 0 18px rgba(0,245,255,0.2)",
+              }}
+            >
+              <Plus size={14} /> Add your first lead
+            </button>
+          )}
+          <style>{`@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }`}</style>
+        </div>
+      </td>
+    </tr>
+  )
+}
