@@ -1,6 +1,7 @@
 "use client"
 
 import TiltCard from "./TiltCard"
+import HeroStats from "./HeroStats"
 import {
   AreaChart,
   Area,
@@ -12,7 +13,7 @@ import {
   Bar,
   Cell,
 } from "recharts"
-import { TrendingUp, Users, DollarSign, PhoneCall, ArrowUpRight, ArrowDownRight } from "lucide-react"
+
 
 interface DashboardConfig {
   clientName: string
@@ -46,43 +47,6 @@ const STATUS_STYLES: Record<string, string> = {
   new:  "badge-red",
 }
 
-function StatCard({
-  label, value, delta, positive, icon: Icon, accent, mono
-}: {
-  label: string; value: string; delta: string; positive: boolean
-  icon: React.ElementType; accent: string; mono?: boolean
-}) {
-  return (
-    <TiltCard className="p-5" intensity={6}>
-      <div className="flex items-start justify-between mb-4">
-        <div
-          className="w-9 h-9 rounded-lg flex items-center justify-center"
-          style={{ background: `${accent}18`, border: `1px solid ${accent}30` }}
-        >
-          <Icon size={18} style={{ color: accent }} />
-        </div>
-        <span
-          className={`flex items-center gap-1 text-xs font-mono px-2 py-0.5 rounded-full ${
-            positive ? "badge-green" : "badge-red"
-          }`}
-        >
-          {positive ? <ArrowUpRight size={10} /> : <ArrowDownRight size={10} />}
-          {delta}
-        </span>
-      </div>
-      <div
-        className={`text-2xl font-bold mb-1 ${mono ? "font-mono" : "font-sans"}`}
-        style={{ color: accent, textShadow: `0 0 16px ${accent}80` }}
-      >
-        {value}
-      </div>
-      <div className="text-xs font-sans" style={{ color: "rgba(232,244,248,0.5)" }}>
-        {label}
-      </div>
-    </TiltCard>
-  )
-}
-
 export default function DashboardView({ config }: { config: DashboardConfig }) {
   const { accentColor, currency, services, cities } = config
 
@@ -96,13 +60,8 @@ export default function DashboardView({ config }: { config: DashboardConfig }) {
 
   return (
     <div className="flex flex-col gap-5">
-      {/* Stat cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
-        <StatCard label="New Leads (30d)" value="284"  delta="+18%"  positive icon={Users}     accent={accentColor} />
-        <StatCard label="Pipeline Value"  value={fmt(48600)} delta="+24%" positive icon={DollarSign} accent="#39FF14" mono />
-        <StatCard label="Conversion Rate" value="31.4%" delta="-2.1%" positive={false} icon={TrendingUp} accent={accentColor} mono />
-        <StatCard label="Calls Booked"    value="62"   delta="+9%"   positive icon={PhoneCall}  accent="#39FF14" />
-      </div>
+      {/* Hero KPI cards */}
+      <HeroStats />
 
       {/* Charts row */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
