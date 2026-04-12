@@ -27,7 +27,7 @@ const NAV_ITEMS = [
   { id: "settings",  label: "Settings",  icon: Settings },
 ]
 
-export default function Sidebar({ activeSection, onNavigate, clientName, accentColor }: SidebarProps) {
+export default function Sidebar({ activeSection, onNavigate, clientName }: SidebarProps) {
   const [expanded, setExpanded] = useState(true)
 
   return (
@@ -35,8 +35,8 @@ export default function Sidebar({ activeSection, onNavigate, clientName, accentC
       className="relative flex flex-col h-full transition-all duration-300 ease-in-out"
       style={{
         width: expanded ? 220 : 64,
-        background: "rgba(5, 8, 16, 0.92)",
-        borderRight: "1px solid rgba(0, 245, 255, 0.12)",
+        background: "rgba(6, 6, 9, 0.97)",
+        borderRight: "1px solid rgba(255, 255, 255, 0.06)",
         backdropFilter: "blur(20px)",
         WebkitBackdropFilter: "blur(20px)",
         flexShrink: 0,
@@ -45,16 +45,15 @@ export default function Sidebar({ activeSection, onNavigate, clientName, accentC
       {/* Logo row */}
       <div
         className="flex items-center h-12 px-3 gap-3 overflow-hidden"
-        style={{ borderBottom: "1px solid rgba(0, 245, 255, 0.1)" }}
+        style={{ borderBottom: "1px solid rgba(255, 255, 255, 0.05)" }}
       >
-        {/* Icon mark */}
         <div
           className="flex-shrink-0 w-8 h-8 rounded-lg flex items-center justify-center text-xs font-bold font-mono"
           style={{
-            background: `rgba(0, 245, 255, 0.12)`,
-            border: `1px solid rgba(0, 245, 255, 0.3)`,
-            color: accentColor,
-            boxShadow: `0 0 12px rgba(0, 245, 255, 0.2)`,
+            background: "rgba(59, 130, 246, 0.12)",
+            border: "1px solid rgba(59, 130, 246, 0.28)",
+            color: "#60a5fa",
+            boxShadow: "0 0 10px rgba(59, 130, 246, 0.15)",
           }}
         >
           {clientName.charAt(0)}
@@ -62,7 +61,7 @@ export default function Sidebar({ activeSection, onNavigate, clientName, accentC
         {expanded && (
           <span
             className="text-sm font-semibold font-sans truncate"
-            style={{ color: "#e8f4f8" }}
+            style={{ color: "#c8cdd8" }}
           >
             {clientName}
           </span>
@@ -70,7 +69,7 @@ export default function Sidebar({ activeSection, onNavigate, clientName, accentC
       </div>
 
       {/* Nav */}
-      <nav className="flex flex-col gap-1 p-2 flex-1 mt-2">
+      <nav className="flex flex-col gap-0.5 p-2 flex-1 mt-2">
         {NAV_ITEMS.map(({ id, label, icon: Icon }) => {
           const isActive = activeSection === id
           return (
@@ -82,15 +81,15 @@ export default function Sidebar({ activeSection, onNavigate, clientName, accentC
                 isActive ? "active" : ""
               )}
               style={{
-                color: isActive ? accentColor : "rgba(232,244,248,0.65)",
+                color: isActive ? "#93c5fd" : "rgba(200,205,216,0.55)",
                 minHeight: 40,
               }}
               title={!expanded ? label : undefined}
             >
               <Icon
-                size={18}
+                size={17}
                 className="flex-shrink-0"
-                style={{ color: isActive ? accentColor : "rgba(232,244,248,0.5)" }}
+                style={{ color: isActive ? "#60a5fa" : "rgba(200,205,216,0.4)" }}
               />
               {expanded && (
                 <span className="text-sm font-medium font-sans truncate">{label}</span>
@@ -98,7 +97,10 @@ export default function Sidebar({ activeSection, onNavigate, clientName, accentC
               {expanded && isActive && (
                 <span
                   className="ml-auto w-1 h-4 rounded-full flex-shrink-0"
-                  style={{ background: accentColor, boxShadow: `0 0 8px ${accentColor}` }}
+                  style={{
+                    background: "#3b82f6",
+                    boxShadow: "0 0 6px rgba(59,130,246,0.6)",
+                  }}
                 />
               )}
             </button>
@@ -107,13 +109,13 @@ export default function Sidebar({ activeSection, onNavigate, clientName, accentC
       </nav>
 
       {/* Logout */}
-      <div className="p-2" style={{ borderTop: "1px solid rgba(0, 245, 255, 0.1)" }}>
+      <div className="p-2" style={{ borderTop: "1px solid rgba(255, 255, 255, 0.05)" }}>
         <button
           className="nav-item flex items-center gap-3 rounded-lg px-2 py-2.5 w-full text-left"
-          style={{ color: "rgba(255,77,109,0.8)" }}
+          style={{ color: "rgba(248,113,113,0.7)" }}
           title={!expanded ? "Logout" : undefined}
         >
-          <LogOut size={18} className="flex-shrink-0" style={{ color: "rgba(255,77,109,0.7)" }} />
+          <LogOut size={17} className="flex-shrink-0" style={{ color: "rgba(248,113,113,0.6)" }} />
           {expanded && <span className="text-sm font-medium font-sans">Logout</span>}
         </button>
       </div>
@@ -123,10 +125,10 @@ export default function Sidebar({ activeSection, onNavigate, clientName, accentC
         onClick={() => setExpanded((v) => !v)}
         className="absolute -right-3 top-1/2 -translate-y-1/2 w-6 h-6 rounded-full flex items-center justify-center z-10"
         style={{
-          background: "#050810",
-          border: "1px solid rgba(0,245,255,0.25)",
-          color: "#00F5FF",
-          boxShadow: "0 0 8px rgba(0,245,255,0.2)",
+          background: "#08080a",
+          border: "1px solid rgba(59,130,246,0.22)",
+          color: "#60a5fa",
+          boxShadow: "0 0 6px rgba(59,130,246,0.15)",
         }}
         aria-label={expanded ? "Collapse sidebar" : "Expand sidebar"}
       >

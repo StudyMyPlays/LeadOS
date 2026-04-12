@@ -19,7 +19,7 @@ const ParticleBackground = dynamic(() => import("./ParticleBackground"), { ssr: 
 const DASHBOARD_CONFIG = {
   clientName: "Mendez Tree Removal LLC",
   clientLogo: null,
-  accentColor: "#00F5FF",
+  accentColor: "#3b82f6",
   currency: "USD",
   services: ["Tree Removal", "Stump Grinding", "Trimming"],
   cities: ["Denver", "Aurora", "Boulder"],
@@ -49,7 +49,7 @@ export default function Dashboard() {
   }
 
   return (
-    <div className="relative flex h-screen w-screen overflow-hidden" style={{ background: "#050810" }}>
+    <div className="relative flex h-screen w-screen overflow-hidden" style={{ background: "#08080a" }}>
       {/* Layer 0: animated grid */}
       <div
         className="grid-bg absolute inset-0 pointer-events-none"

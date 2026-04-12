@@ -23,7 +23,7 @@ export default function ParticleBackground() {
 
     let animFrameId: number
     const particles: Particle[] = []
-    const COLORS = ["#00F5FF", "#39FF14", "#00b4d8"]
+    const COLORS = ["#3b82f6", "#60a5fa", "#22c55e"]
 
     const resize = () => {
       canvas.width = window.innerWidth
