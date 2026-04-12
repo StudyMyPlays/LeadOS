@@ -1,8 +1,19 @@
 "use client"
 
 import TiltCard from "./TiltCard"
-import { Phone, Calendar, DollarSign } from "lucide-react"
+import FunnelChart from "./FunnelChart"
+import { Phone, Calendar } from "lucide-react"
 
+// ── Funnel stages (5-step journey) ──────────────────────────────────────────
+const FUNNEL_STAGES = [
+  { name: "New Leads",     count: 47, color: "#00F5FF", avgDays: 0  },
+  { name: "Contacted",     count: 31, color: "#4D9FFF", avgDays: 2  },
+  { name: "Estimate Sent", count: 22, color: "#9B59FF", avgDays: 5  },
+  { name: "Negotiating",   count: 16, color: "#FFB800", avgDays: 9  },
+  { name: "Converted",     count: 14, color: "#39FF14", avgDays: 14 },
+]
+
+// ── Kanban columns ───────────────────────────────────────────────────────────
 const STAGES = [
   {
     id: "new",
@@ -11,31 +22,31 @@ const STAGES = [
     count: 18,
     value: 12400,
     cards: [
-      { name: "Robert Martinez", service: "Tree Removal", city: "Denver", value: 1850 },
-      { name: "Priya Patel",     service: "Tree Removal", city: "Denver", value: 2200 },
-      { name: "Marcus Johnson",  service: "Stump Grinding",city:"Aurora", value: 390  },
+      { name: "Robert Martinez", service: "Tree Removal",   city: "Denver", value: 1850 },
+      { name: "Priya Patel",     service: "Tree Removal",   city: "Denver", value: 2200 },
+      { name: "Marcus Johnson",  service: "Stump Grinding", city: "Aurora", value: 390  },
     ],
   },
   {
     id: "contacted",
     label: "Contacted",
-    color: "#00b4d8",
+    color: "#4D9FFF",
     count: 12,
     value: 9800,
     cards: [
-      { name: "Sarah Kim",    service: "Stump Grinding", city: "Boulder", value: 420 },
-      { name: "David Park",  service: "Trimming",        city: "Denver",  value: 220 },
+      { name: "Sarah Kim",   service: "Stump Grinding", city: "Boulder", value: 420 },
+      { name: "David Park",  service: "Trimming",       city: "Denver",  value: 220 },
     ],
   },
   {
     id: "quoted",
     label: "Quoted",
-    color: "#7b2fff",
+    color: "#9B59FF",
     count: 8,
     value: 21600,
     cards: [
-      { name: "Olivia Chen",     service: "Tree Removal", city: "Boulder", value: 3100 },
-      { name: "Carlos Rivera",   service: "Trimming",     city: "Boulder", value: 275  },
+      { name: "Olivia Chen",   service: "Tree Removal", city: "Boulder", value: 3100 },
+      { name: "Carlos Rivera", service: "Trimming",     city: "Boulder", value: 275  },
     ],
   },
   {
@@ -56,44 +67,20 @@ export default function PipelineView({ config }: { config: { currency: string } 
     new Intl.NumberFormat("en-US", { style: "currency", currency: config.currency, maximumFractionDigits: 0 }).format(n)
 
   return (
-    <div className="flex flex-col gap-4">
-      {/* Funnel progress bar */}
-      <TiltCard className="p-5" intensity={3}>
-        <p className="text-sm font-semibold font-sans mb-4" style={{ color: "#e8f4f8" }}>
-          Pipeline Funnel
+    <div className="flex flex-col gap-6">
+
+      {/* ── 3D Funnel visualization ──────────────────────────────────── */}
+      <TiltCard className="p-5 md:p-6" intensity={3}>
+        <p
+          className="text-xs font-semibold font-sans mb-5 tracking-widest"
+          style={{ color: "rgba(232,244,248,0.45)" }}
+        >
+          LEAD PIPELINE FUNNEL
         </p>
-        <div className="flex flex-col gap-3">
-          {STAGES.map((stage, i) => {
-            const pct = Math.round(100 - i * 22)
-            return (
-              <div key={stage.id} className="flex items-center gap-3">
-                <div className="w-20 text-xs font-mono shrink-0" style={{ color: "rgba(232,244,248,0.55)" }}>
-                  {stage.label}
-                </div>
-                <div className="flex-1 h-5 rounded-lg overflow-hidden" style={{ background: "rgba(0,245,255,0.06)" }}>
-                  <div
-                    className="h-full rounded-lg flex items-center px-2 transition-all duration-700"
-                    style={{
-                      width: `${pct}%`,
-                      background: `linear-gradient(90deg, ${stage.color}cc, ${stage.color}66)`,
-                      boxShadow: `0 0 10px ${stage.color}44`,
-                    }}
-                  >
-                    <span className="text-xs font-mono font-bold" style={{ color: "#050810" }}>
-                      {stage.count}
-                    </span>
-                  </div>
-                </div>
-                <div className="w-20 text-right text-xs font-mono" style={{ color: stage.color }}>
-                  {fmt(stage.value)}
-                </div>
-              </div>
-            )
-          })}
-        </div>
+        <FunnelChart stages={FUNNEL_STAGES} />
       </TiltCard>
 
-      {/* Kanban columns */}
+      {/* ── Kanban board ─────────────────────────────────────────────── */}
       <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
         {STAGES.map((stage) => (
           <div key={stage.id} className="flex flex-col gap-3">
@@ -113,7 +100,7 @@ export default function PipelineView({ config }: { config: { currency: string } 
               </span>
             </div>
 
-            {/* Cards */}
+            {/* Lead cards */}
             {stage.cards.map((card, ci) => (
               <TiltCard key={ci} className="p-3" intensity={9}>
                 <p className="text-xs font-semibold font-sans mb-1" style={{ color: "#e8f4f8" }}>
@@ -123,7 +110,10 @@ export default function PipelineView({ config }: { config: { currency: string } 
                   {card.service} · {card.city}
                 </p>
                 <div className="flex items-center justify-between">
-                  <span className="text-xs font-mono font-bold" style={{ color: "#39FF14", textShadow: "0 0 8px rgba(57,255,20,0.5)" }}>
+                  <span
+                    className="text-xs font-mono font-bold"
+                    style={{ color: "#39FF14", textShadow: "0 0 8px rgba(57,255,20,0.5)" }}
+                  >
                     {fmt(card.value)}
                   </span>
                   <div className="flex items-center gap-1.5">
