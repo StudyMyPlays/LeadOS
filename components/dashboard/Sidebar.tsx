@@ -1,5 +1,6 @@
 "use client"
 
+import Link from "next/link"
 import {
   LayoutGrid,
   List,
@@ -7,6 +8,10 @@ import {
   BarChart2,
   Settings,
   LogOut,
+  Users,
+  GitBranch,
+  Bell,
+  ShieldCheck,
 } from "lucide-react"
 import { cn } from "@/lib/utils"
 
@@ -29,6 +34,13 @@ const NAV_ITEMS = [
   { id: "settings",  label: "Settings",  icon: Settings },
 ]
 
+// Admin is always available to Owners (Owner === admin).
+const ADMIN_ITEMS = [
+  { href: "/admin/users",         label: "User Management", icon: Users },
+  { href: "/admin/routing",       label: "Routing Rules",   icon: GitBranch },
+  { href: "/admin/notifications", label: "Notifications",   icon: Bell },
+]
+
 const EXPANDED_W  = 220
 const COLLAPSED_W = 64
 
@@ -41,6 +53,8 @@ export default function Sidebar({
   onLogout,
   expanded,
 }: SidebarProps) {
+  const isAdmin = role === "owner"
+
   return (
     <aside
       className="relative flex flex-col h-full transition-[width] duration-300 ease-in-out"
@@ -83,50 +97,114 @@ export default function Sidebar({
         )}
       </div>
 
-      {/* Nav */}
-      <nav className={cn("flex flex-col gap-0.5 flex-1 mt-2", expanded ? "p-2" : "px-2 py-2")}>
-        {NAV_ITEMS.map(({ id, label, icon: Icon }) => {
-          const isActive = activeSection === id
-          return (
-            <button
-              key={id}
-              onClick={() => onNavigate(id)}
-              className={cn(
-                "nav-item flex items-center rounded-lg w-full text-left",
-                isActive ? "active" : "",
-                expanded
-                  ? "gap-3 px-2 py-2.5 justify-start"
-                  : "justify-center px-0 py-2.5",
-              )}
-              style={{
-                color: isActive ? "#93c5fd" : "rgba(200,205,216,0.55)",
-                minHeight: 40,
-              }}
-              title={!expanded ? label : undefined}
-              aria-label={label}
-              aria-current={isActive ? "page" : undefined}
-            >
-              <Icon
-                size={17}
-                className="flex-shrink-0"
-                style={{ color: isActive ? "#60a5fa" : "rgba(200,205,216,0.4)" }}
-              />
-              {expanded && (
-                <span className="text-sm font-medium font-sans truncate">{label}</span>
-              )}
-              {expanded && isActive && (
-                <span
-                  className="ml-auto w-1 h-4 rounded-full flex-shrink-0"
-                  style={{
-                    background: "#3b82f6",
-                    boxShadow: "0 0 6px rgba(59,130,246,0.6)",
-                  }}
+      {/* Scrollable nav area */}
+      <div className="flex-1 overflow-y-auto overflow-x-hidden">
+        {/* Workspace nav */}
+        <nav className={cn("flex flex-col gap-0.5", expanded ? "p-2" : "px-2 py-2")}>
+          {NAV_ITEMS.map(({ id, label, icon: Icon }) => {
+            const isActive = activeSection === id
+            return (
+              <button
+                key={id}
+                onClick={() => onNavigate(id)}
+                className={cn(
+                  "nav-item flex items-center rounded-lg w-full text-left",
+                  isActive ? "active" : "",
+                  expanded
+                    ? "gap-3 px-2 py-2.5 justify-start"
+                    : "justify-center px-0 py-2.5",
+                )}
+                style={{
+                  color: isActive ? "#93c5fd" : "rgba(200,205,216,0.55)",
+                  minHeight: 40,
+                }}
+                title={!expanded ? label : undefined}
+                aria-label={label}
+                aria-current={isActive ? "page" : undefined}
+              >
+                <Icon
+                  size={17}
+                  className="flex-shrink-0"
+                  style={{ color: isActive ? "#60a5fa" : "rgba(200,205,216,0.4)" }}
                 />
-              )}
-            </button>
-          )
-        })}
-      </nav>
+                {expanded && (
+                  <span className="text-sm font-medium font-sans truncate">{label}</span>
+                )}
+                {expanded && isActive && (
+                  <span
+                    className="ml-auto w-1 h-4 rounded-full flex-shrink-0"
+                    style={{
+                      background: "#3b82f6",
+                      boxShadow: "0 0 6px rgba(59,130,246,0.6)",
+                    }}
+                  />
+                )}
+              </button>
+            )
+          })}
+        </nav>
+
+        {/* Admin section — only rendered for Owner */}
+        {isAdmin && (
+          <div
+            className={cn("pt-2 mt-1", expanded ? "px-2 pb-2" : "px-2 pb-2")}
+            style={{ borderTop: "1px solid rgba(255,255,255,0.05)" }}
+          >
+            {expanded ? (
+              <div className="flex items-center gap-1.5 px-2 mb-2 mt-1">
+                <ShieldCheck size={10} style={{ color: "rgba(16,185,129,0.8)" }} />
+                <span
+                  className="text-[10px] font-mono uppercase tracking-[0.12em] font-semibold"
+                  style={{ color: "rgba(16,185,129,0.75)" }}
+                >
+                  Admin
+                </span>
+              </div>
+            ) : (
+              <div className="flex items-center justify-center mb-1 mt-0.5">
+                <span
+                  className="w-1 h-1 rounded-full"
+                  style={{
+                    background: "rgba(16,185,129,0.8)",
+                    boxShadow: "0 0 6px rgba(16,185,129,0.55)",
+                  }}
+                  aria-hidden="true"
+                />
+              </div>
+            )}
+
+            <div className="flex flex-col gap-0.5">
+              {ADMIN_ITEMS.map(({ href, label, icon: Icon }) => (
+                <Link
+                  key={href}
+                  href={href}
+                  className={cn(
+                    "nav-item flex items-center rounded-lg w-full",
+                    expanded
+                      ? "gap-3 px-2 py-2.5 justify-start"
+                      : "justify-center px-0 py-2.5",
+                  )}
+                  style={{
+                    color: "rgba(200,205,216,0.55)",
+                    minHeight: 40,
+                  }}
+                  title={!expanded ? label : undefined}
+                  aria-label={label}
+                >
+                  <Icon
+                    size={17}
+                    className="flex-shrink-0"
+                    style={{ color: "rgba(16,185,129,0.65)" }}
+                  />
+                  {expanded && (
+                    <span className="text-sm font-medium font-sans truncate">{label}</span>
+                  )}
+                </Link>
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
 
       {/* User info + Logout */}
       <div
@@ -142,10 +220,13 @@ export default function Sidebar({
               {userEmail}
             </p>
             <p
-              className="text-[11px] font-mono capitalize mt-0.5"
-              style={{ color: "rgba(96,165,250,0.55)" }}
+              className="text-[11px] font-mono capitalize mt-0.5 flex items-center gap-1"
+              style={{
+                color: isAdmin ? "rgba(16,185,129,0.75)" : "rgba(96,165,250,0.55)",
+              }}
             >
-              {role}
+              {isAdmin && <ShieldCheck size={10} />}
+              {isAdmin ? "owner · admin" : role}
             </p>
           </div>
         )}
