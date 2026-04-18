@@ -13,6 +13,7 @@ export interface Lead {
   name: string
   city: string
   phone: string
+  email?: string
   service: string
   source: LeadSource
   jobSize: JobSize
