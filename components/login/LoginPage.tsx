@@ -3,6 +3,7 @@
 import { useState } from "react"
 import dynamic from "next/dynamic"
 import { Eye, EyeOff, User, Briefcase } from "lucide-react"
+import { authenticate } from "@/lib/users"
 
 const WireframeSphere = dynamic(() => import("./WireframeSphere"), { ssr: false })
 
@@ -24,11 +25,6 @@ export default function LoginPage({ config, onLogin }: LoginPageProps) {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState("")
 
-  const DEMO_CREDS: Record<"owner" | "partner", { email: string; password: string }> = {
-    owner:   { email: "owner@demo.com",   password: "demo1234" },
-    partner: { email: "partner@demo.com", password: "demo1234" },
-  }
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setError("")
@@ -36,9 +32,9 @@ export default function LoginPage({ config, onLogin }: LoginPageProps) {
 
     await new Promise((r) => setTimeout(r, 800))
 
-    const expected = DEMO_CREDS[role]
-    if (email.trim().toLowerCase() === expected.email && password === expected.password) {
-      onLogin(role, email.trim().toLowerCase())
+    const user = authenticate(email, password, role)
+    if (user) {
+      onLogin(role, user.email)
     } else {
       setError("Invalid credentials. Use the demo credentials below.")
     }

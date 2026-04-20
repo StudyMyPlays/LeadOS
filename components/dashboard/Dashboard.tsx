@@ -8,7 +8,6 @@ import DashboardView from "./DashboardView"
 import LeadsView from "./LeadsView"
 import PipelineView from "./PipelineView"
 import AnalyticsView from "./AnalyticsView"
-import SettingsView from "./SettingsView"
 import type { DashboardConfig as AdminConfig } from "@/components/admin/AdminConfigPanel"
 
 const ParticleBackground = dynamic(() => import("./ParticleBackground"), { ssr: false })
@@ -25,7 +24,7 @@ const DEFAULT_CONFIG = {
   commissionPerLead: 50,
 }
 
-type Section = "dashboard" | "leads" | "pipeline" | "analytics" | "settings"
+type Section = "dashboard" | "leads" | "pipeline" | "analytics"
 
 interface DashboardProps {
   role?: "owner" | "partner"
@@ -46,7 +45,6 @@ export default function Dashboard({ role = "owner", userEmail, onLogout, preview
       case "leads":      return <LeadsView config={config} />
       case "pipeline":   return <PipelineView config={config} />
       case "analytics":  return <AnalyticsView config={config} />
-      case "settings":   return <SettingsView config={config} />
       default:           return <DashboardView config={config} />
     }
   }
