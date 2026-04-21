@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useRef } from "react"
-import { Plus, X, Copy, Check, Eye, ArrowLeft } from "lucide-react"
+import { Plus, X, Check, ArrowLeft, Save, Settings as SettingsIcon } from "lucide-react"
 
 export interface DashboardConfig {
   clientName: string
@@ -16,14 +16,14 @@ export interface DashboardConfig {
 }
 
 const DEFAULT_CONFIG: DashboardConfig = {
-  clientName: "",
+  clientName: "LeadOS",
   clientLogo: null,
   accentColor: "#3b82f6",
   currency: "USD",
-  services: [],
-  cities: [],
-  ownerEmail: "",
-  partnerEmail: "",
+  services: ["Consultation", "Installation", "Maintenance", "Emergency"],
+  cities: ["New York", "Los Angeles", "Chicago"],
+  ownerEmail: "owner@demo.com",
+  partnerEmail: "partner@demo.com",
   commissionPerLead: 50,
 }
 
@@ -44,9 +44,7 @@ function ChipInput({
 
   const commit = () => {
     const trimmed = val.trim()
-    if (trimmed && !items.includes(trimmed)) {
-      onAdd(trimmed)
-    }
+    if (trimmed && !items.includes(trimmed)) onAdd(trimmed)
     setVal("")
   }
 
@@ -119,13 +117,11 @@ function Section({ title, children }: { title: string; children: React.ReactNode
 }
 
 interface AdminConfigPanelProps {
-  onPreview: (config: DashboardConfig) => void
   onBack?: () => void
 }
 
-export default function AdminConfigPanel({ onPreview, onBack }: AdminConfigPanelProps) {
+export default function AdminConfigPanel({ onBack }: AdminConfigPanelProps) {
   const [cfg, setCfg] = useState<DashboardConfig>(DEFAULT_CONFIG)
-  const [copied, setCopied] = useState(false)
   const [saved, setSaved] = useState(false)
   const fileRef = useRef<HTMLInputElement>(null)
 
@@ -137,14 +133,6 @@ export default function AdminConfigPanel({ onPreview, onBack }: AdminConfigPanel
 
   const removeFrom = (key: "services" | "cities", val: string) =>
     set(key, cfg[key].filter((v) => v !== val))
-
-  const generatedJson = JSON.stringify(cfg, null, 2)
-
-  const handleCopy = () => {
-    navigator.clipboard.writeText(generatedJson)
-    setCopied(true)
-    setTimeout(() => setCopied(false), 2000)
-  }
 
   const handleSave = () => {
     setSaved(true)
@@ -163,118 +151,113 @@ export default function AdminConfigPanel({ onPreview, onBack }: AdminConfigPanel
   const isValid = cfg.clientName.trim() !== "" && cfg.ownerEmail.trim() !== ""
 
   return (
-    <div
-      className="min-h-screen w-full"
-      style={{ background: "#06060a" }}
-    >
+    <div className="min-h-screen w-full" style={{ background: "#06060a" }}>
       {/* Animated grid bg */}
       <div className="grid-bg fixed inset-0 pointer-events-none" aria-hidden="true" />
 
       <div className="relative z-10 max-w-5xl mx-auto px-5 py-8 flex flex-col gap-6">
 
         {/* Header */}
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-4">
+        <div className="flex items-center justify-between flex-wrap gap-3">
+          <div className="flex items-center gap-3">
             {onBack && (
               <button
                 type="button"
                 onClick={onBack}
-                className="flex items-center gap-1.5 text-sm font-sans"
-                style={{ color: "rgba(200,205,216,0.40)", background: "none", border: "none", cursor: "pointer" }}
+                className="flex h-8 w-8 items-center justify-center rounded-lg"
+                style={{
+                  background: "rgba(255,255,255,0.03)",
+                  border: "1px solid rgba(255,255,255,0.07)",
+                  color: "rgba(200,205,216,0.55)",
+                  cursor: "pointer",
+                }}
+                aria-label="Back"
               >
-                <ArrowLeft size={14} /> Back
+                <ArrowLeft size={14} />
               </button>
             )}
-            <div>
-              <h1
-                className="text-xl font-bold font-sans"
-                style={{ color: "#e2e8f0" }}
+            <div className="flex items-center gap-2.5">
+              <div
+                className="flex h-9 w-9 items-center justify-center rounded-lg"
+                style={{
+                  background: "rgba(59,130,246,0.10)",
+                  border: "1px solid rgba(59,130,246,0.25)",
+                  color: "#60a5fa",
+                }}
               >
-                White-Label Config
-              </h1>
-              <p
-                className="text-xs font-mono mt-0.5"
-                style={{ color: "rgba(200,205,216,0.35)" }}
-              >
-                /admin/config — super admin only
-              </p>
+                <SettingsIcon size={15} />
+              </div>
+              <div>
+                <div
+                  className="text-[11px] font-mono uppercase tracking-[0.14em]"
+                  style={{ color: "rgba(200,205,216,0.35)" }}
+                >
+                  LeadOS / Admin
+                </div>
+                <h1
+                  className="text-xl font-semibold font-sans tracking-tight"
+                  style={{ color: "#e2e8f0" }}
+                >
+                  Settings
+                </h1>
+              </div>
             </div>
           </div>
 
-          <div className="flex items-center gap-2">
-            <button
-              type="button"
-              onClick={() => onPreview(cfg)}
-              disabled={!isValid}
-              className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold font-sans"
-              style={{
-                background: "rgba(255,255,255,0.04)",
-                border: "1px solid rgba(255,255,255,0.09)",
-                color: isValid ? "#c8cdd8" : "rgba(200,205,216,0.25)",
-                cursor: isValid ? "pointer" : "not-allowed",
-                transition: "all 0.15s",
-              }}
-            >
-              <Eye size={14} /> Preview Dashboard
-            </button>
-            <button
-              type="button"
-              onClick={handleSave}
-              disabled={!isValid}
-              className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold font-sans"
-              style={{
-                background: isValid ? "linear-gradient(135deg, #1e3a5f, #1d4ed8)" : "rgba(255,255,255,0.04)",
-                border: "1px solid rgba(59,130,246,0.30)",
-                color: isValid ? "#fff" : "rgba(200,205,216,0.25)",
-                cursor: isValid ? "pointer" : "not-allowed",
-                boxShadow: isValid ? "0 2px 12px rgba(59,130,246,0.20)" : "none",
-                transition: "all 0.15s",
-              }}
-            >
-              {saved ? <><Check size={14} /> Saved</> : "Save Config"}
-            </button>
-          </div>
-        </div>
-
-        {/* Live preview bar */}
-        {cfg.clientName && (
-          <div
-            className="flex items-center gap-3 px-4 py-3 rounded-xl"
+          <button
+            type="button"
+            onClick={handleSave}
+            disabled={!isValid}
+            className="flex items-center gap-2 h-9 px-4 rounded-lg text-sm font-semibold font-sans"
             style={{
-              background: "rgba(59,130,246,0.05)",
-              border: "1px solid rgba(59,130,246,0.14)",
+              background: isValid ? "linear-gradient(135deg, #1e3a5f, #1d4ed8)" : "rgba(255,255,255,0.04)",
+              border: "1px solid rgba(59,130,246,0.30)",
+              color: isValid ? "#fff" : "rgba(200,205,216,0.25)",
+              cursor: isValid ? "pointer" : "not-allowed",
+              boxShadow: isValid ? "0 2px 12px rgba(59,130,246,0.22)" : "none",
+              transition: "all 0.15s",
             }}
           >
-            {cfg.clientLogo
-              ? <img src={cfg.clientLogo} alt="logo" className="w-8 h-8 rounded-lg object-cover" />
-              : (
-                <div
-                  className="w-8 h-8 rounded-lg flex items-center justify-center text-sm font-bold font-mono"
-                  style={{
-                    background: `${cfg.accentColor}18`,
-                    border: `1px solid ${cfg.accentColor}35`,
-                    color: cfg.accentColor,
-                  }}
-                >
-                  {cfg.clientName.charAt(0)}
-                </div>
-              )
-            }
-            <div className="flex flex-col">
-              <span className="text-sm font-semibold font-sans" style={{ color: "#e2e8f0" }}>
-                {cfg.clientName}
-              </span>
-              <span className="text-xs font-mono" style={{ color: "rgba(200,205,216,0.40)" }}>
-                Live preview
-              </span>
-            </div>
-            <div
-              className="ml-3 w-4 h-4 rounded-full flex-shrink-0"
-              style={{ background: cfg.accentColor, boxShadow: `0 0 8px ${cfg.accentColor}80` }}
-              title={`Accent: ${cfg.accentColor}`}
-            />
+            {saved ? <><Check size={14} /> Saved</> : <><Save size={14} /> Save Settings</>}
+          </button>
+        </div>
+
+        {/* Live brand preview bar */}
+        <div
+          className="flex items-center gap-3 px-4 py-3 rounded-xl"
+          style={{
+            background: "rgba(59,130,246,0.05)",
+            border: "1px solid rgba(59,130,246,0.14)",
+          }}
+        >
+          {cfg.clientLogo
+            ? <img src={cfg.clientLogo} alt="logo" className="w-9 h-9 rounded-lg object-cover" />
+            : (
+              <div
+                className="w-9 h-9 rounded-lg flex items-center justify-center text-sm font-bold font-mono"
+                style={{
+                  background: `${cfg.accentColor}18`,
+                  border: `1px solid ${cfg.accentColor}35`,
+                  color: cfg.accentColor,
+                }}
+              >
+                {cfg.clientName.charAt(0) || "?"}
+              </div>
+            )}
+          <div className="flex flex-col min-w-0">
+            <span className="text-sm font-semibold font-sans truncate" style={{ color: "#e2e8f0" }}>
+              {cfg.clientName || "Client Name"}
+            </span>
+            <span className="text-xs font-mono" style={{ color: "rgba(200,205,216,0.40)" }}>
+              Brand preview
+            </span>
           </div>
-        )}
+          <div
+            className="ml-auto w-4 h-4 rounded-full flex-shrink-0"
+            style={{ background: cfg.accentColor, boxShadow: `0 0 8px ${cfg.accentColor}80` }}
+            title={`Accent: ${cfg.accentColor}`}
+          />
+        </div>
 
         {/* Two-column layout */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
@@ -297,7 +280,7 @@ export default function AdminConfigPanel({ onPreview, onBack }: AdminConfigPanel
 
               <div className="flex flex-col gap-1.5">
                 <label className="config-label">Client Logo</label>
-                <div className="flex items-center gap-3">
+                <div className="flex items-center gap-3 flex-wrap">
                   {cfg.clientLogo && (
                     <img src={cfg.clientLogo} alt="Logo preview" className="w-10 h-10 rounded-lg object-cover" />
                   )}
@@ -422,7 +405,6 @@ export default function AdminConfigPanel({ onPreview, onBack }: AdminConfigPanel
 
           {/* Right column */}
           <div className="flex flex-col gap-5">
-
             <Section title="Services">
               <ChipInput
                 label="Services Offered"
@@ -442,42 +424,6 @@ export default function AdminConfigPanel({ onPreview, onBack }: AdminConfigPanel
                 onRemove={(v) => removeFrom("cities", v)}
               />
             </Section>
-
-            <Section title="Generated Config JSON">
-              <div className="relative">
-                <pre
-                  className="rounded-lg p-4 text-xs font-mono overflow-auto"
-                  style={{
-                    background: "rgba(6,6,9,0.90)",
-                    border: "1px solid rgba(255,255,255,0.06)",
-                    color: "#93c5fd",
-                    maxHeight: 240,
-                    lineHeight: 1.6,
-                  }}
-                >
-                  {generatedJson}
-                </pre>
-                <button
-                  type="button"
-                  onClick={handleCopy}
-                  className="absolute top-3 right-3 flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-xs font-mono"
-                  style={{
-                    background: "rgba(59,130,246,0.10)",
-                    border: "1px solid rgba(59,130,246,0.22)",
-                    color: copied ? "#4ade80" : "#93c5fd",
-                    cursor: "pointer",
-                    transition: "color 0.15s",
-                  }}
-                  aria-label="Copy JSON"
-                >
-                  {copied ? <><Check size={11} /> Copied</> : <><Copy size={11} /> Copy</>}
-                </button>
-              </div>
-              <p className="text-xs font-mono" style={{ color: "rgba(200,205,216,0.28)" }}>
-                Paste this into the DASHBOARD_CONFIG object in Dashboard.tsx to onboard the client.
-              </p>
-            </Section>
-
           </div>
         </div>
       </div>

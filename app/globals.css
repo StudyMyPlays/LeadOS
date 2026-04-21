@@ -252,22 +252,25 @@
   position: relative;
   transition: transform 0.18s ease, box-shadow 0.18s ease, background 0.18s ease;
 }
+.table-row-hover::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, rgba(59, 130, 246, 0.3), transparent);
+  pointer-events: none;
+  opacity: 0;
+  z-index: 1;
+}
 .table-row-hover:hover {
   transform: translateY(-1px);
   background: rgba(59, 130, 246, 0.04) !important;
   box-shadow: 0 2px 0 rgba(59, 130, 246, 0.28);
 }
-.table-row-hover:hover .scan-line {
+.table-row-hover:hover::before {
   animation: scanLine 0.7s ease forwards;
-}
-.scan-line {
-  position: absolute;
-  left: 0;
-  right: 0;
-  height: 2px;
-  background: linear-gradient(90deg, transparent, rgba(59,130,246,0.3), transparent);
-  pointer-events: none;
-  opacity: 0;
 }
 
 /* ── 3D extruded badge ───────────────────────────────────────── */

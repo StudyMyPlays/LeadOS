@@ -9,7 +9,6 @@ import {
   Settings,
   LogOut,
   Users,
-  GitBranch,
   Bell,
   ShieldCheck,
 } from "lucide-react"
@@ -30,14 +29,13 @@ const NAV_ITEMS = [
   { id: "leads",     label: "All Leads", icon: List },
   { id: "pipeline",  label: "Pipeline",  icon: Filter },
   { id: "analytics", label: "Analytics", icon: BarChart2 },
-  { id: "settings",  label: "Settings",  icon: Settings },
 ]
 
 // Admin is always available to Owners (Owner === admin).
 const ADMIN_ITEMS = [
   { href: "/admin/users",         label: "User Management", icon: Users },
-  { href: "/admin/routing",       label: "Routing Rules",   icon: GitBranch },
   { href: "/admin/notifications", label: "Notifications",   icon: Bell },
+  { href: "/admin/config",        label: "Settings",        icon: Settings },
 ]
 
 const EXPANDED_W  = 220

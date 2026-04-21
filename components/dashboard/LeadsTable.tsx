@@ -272,16 +272,10 @@ function LeadRow({
       style={{ borderBottom: "1px solid rgba(255,255,255,0.04)", cursor: "pointer" }}
       onClick={() => onView(lead)}
     >
-      {/* Scan line overlay */}
-      <td className="relative" style={{ width: 0, padding: 0 }}>
-        <div className="scan-line" />
-      </td>
-
       {/* # */}
       <td
         className="px-4 py-3 font-mono font-medium"
         style={{ color: "rgba(212,216,224,0.25)", width: 40 }}
-        onClick={(e) => e.stopPropagation()}
       >
         {idx}
       </td>

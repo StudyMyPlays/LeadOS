@@ -18,7 +18,6 @@ const SECTION_LABELS: Record<string, string> = {
   leads:     "All Leads",
   pipeline:  "Pipeline",
   analytics: "Analytics",
-  settings:  "Settings",
 }
 
 interface Notification {
