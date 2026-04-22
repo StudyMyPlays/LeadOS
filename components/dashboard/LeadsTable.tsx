@@ -160,33 +160,38 @@ export default function LeadsTable({
     <div className="flex flex-col gap-4">
 
       {/* ── Toolbar ───────────────────────────────────────────── */}
-      <div className="flex flex-wrap items-center gap-2.5">
+      <div className="flex flex-wrap items-center gap-2">
         {/* Search */}
         <label
-          className="flex items-center gap-2 px-3 h-9 rounded-lg flex-1 min-w-[220px]"
-          style={{
-            background: "rgba(255,255,255,0.04)",
-            border: "1px solid rgba(255,255,255,0.08)",
-          }}
+          className="toolbar-pill flex items-center gap-2 pl-3 pr-2 h-9 flex-1 min-w-[240px]"
         >
-          <Search size={13} style={{ color: "rgba(212,216,224,0.35)", flexShrink: 0 }} />
+          <Search size={13} style={{ color: "rgba(212,216,224,0.45)", flexShrink: 0 }} />
           <input
             type="text"
             placeholder="Search name, business, city, phone, email…"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="bg-transparent outline-none w-full text-xs font-mono"
-            style={{ color: "#d4d8e0" }}
+            className="bg-transparent outline-none w-full text-[13px] font-sans"
+            style={{ color: "#e5e7eb" }}
             aria-label="Search leads"
           />
           {search && (
-            <button onClick={() => setSearch("")} aria-label="Clear search">
-              <X size={11} style={{ color: "rgba(212,216,224,0.4)" }} />
+            <button
+              type="button"
+              onClick={() => setSearch("")}
+              aria-label="Clear search"
+              className="flex items-center justify-center w-5 h-5 rounded-md"
+              style={{
+                color: "rgba(212,216,224,0.5)",
+                background: "rgba(255,255,255,0.04)",
+              }}
+            >
+              <X size={11} />
             </button>
           )}
         </label>
 
-        {/* Filter chips */}
+        {/* Filter dropdowns — outlined pills with chevron */}
         <FilterSelect
           label="Status" value={statusFilter}
           onChange={(v) => setStatus(v as LeadStatus | "All")}
@@ -205,42 +210,35 @@ export default function LeadsTable({
           labelMap={SOURCE_LABELS as Record<string, string>}
         />
 
+        {/* Compact reset icon button — only rendered when any filter is active */}
         {hasFilters && (
           <button
+            type="button"
             onClick={() => {
               setSearch(""); setStatus("All"); setSource("All"); setService("All"); setPriority("All")
             }}
-            className="text-xs font-mono h-9 px-3 rounded-lg flex items-center gap-1.5"
-            style={{ color: "#f87171", border: "1px solid rgba(248,113,113,0.22)", background: "rgba(248,113,113,0.06)" }}
+            aria-label="Clear all filters"
+            title="Clear all filters"
+            className="toolbar-icon-btn flex items-center justify-center w-9 h-9"
           >
-            <X size={11} /> Clear
+            <X size={13} style={{ color: "#f87171" }} />
           </button>
         )}
 
-        <div className="text-xs font-mono ml-auto" style={{ color: "rgba(212,216,224,0.35)" }}>
+        {/* Counter pushed to the far right, paired with the primary CTA */}
+        <div
+          className="ml-auto text-[11px] font-mono whitespace-nowrap hidden md:block"
+          style={{ color: "rgba(212,216,224,0.4)" }}
+        >
           {sorted.length} lead{sorted.length !== 1 ? "s" : ""}
         </div>
 
-        {/* Add New Lead CTA */}
+        {/* Add New Lead — solid primary CTA */}
         <button
           onClick={onAddLead}
-          className="flex items-center gap-2 h-9 px-4 rounded-lg text-xs font-semibold font-sans"
-          style={{
-            background: "rgba(59,130,246,0.14)",
-            border: "1px solid rgba(59,130,246,0.35)",
-            color: "#93c5fd",
-            boxShadow: "0 0 14px rgba(59,130,246,0.16)",
-          }}
-          onMouseEnter={(e) => {
-            e.currentTarget.style.background = "rgba(59,130,246,0.22)"
-            e.currentTarget.style.boxShadow  = "0 0 22px rgba(59,130,246,0.28)"
-          }}
-          onMouseLeave={(e) => {
-            e.currentTarget.style.background = "rgba(59,130,246,0.14)"
-            e.currentTarget.style.boxShadow  = "0 0 14px rgba(59,130,246,0.16)"
-          }}
+          className="toolbar-primary-btn flex items-center gap-1.5 h-9 px-4 text-[13px] font-semibold font-sans"
         >
-          <Plus size={14} />
+          <Plus size={14} strokeWidth={2.5} />
           Add New Lead
         </button>
       </div>
@@ -321,23 +319,31 @@ function FilterSelect({
   labelMap?: Record<string, string>
 }) {
   const isActive = value !== "All"
+  const displayValue = value === "All" ? label : (labelMap?.[value] ?? value)
   return (
     <div
-      className="relative flex items-center gap-1.5 px-3 h-9 rounded-lg cursor-pointer"
+      className="toolbar-pill relative flex items-center gap-2 pl-3 pr-2.5 h-9 cursor-pointer"
+      data-active={isActive ? "true" : "false"}
       style={{
-        background: isActive ? "rgba(59,130,246,0.10)" : "rgba(255,255,255,0.04)",
-        border: `1px solid ${isActive ? "rgba(59,130,246,0.32)" : "rgba(255,255,255,0.08)"}`,
-        color: isActive ? "#93c5fd" : "rgba(212,216,224,0.5)",
+        color: isActive ? "#93c5fd" : "rgba(212,216,224,0.7)",
       }}
     >
-      <span className="text-xs font-mono whitespace-nowrap">
-        {value === "All" ? label : (labelMap?.[value] ?? value)}
-      </span>
-      <ChevronDown size={11} />
+      {isActive && (
+        <span
+          aria-hidden="true"
+          className="w-1.5 h-1.5 rounded-full flex-shrink-0"
+          style={{
+            background: "#60a5fa",
+            boxShadow: "0 0 6px rgba(96,165,250,0.55)",
+          }}
+        />
+      )}
+      <span className="text-[13px] font-sans whitespace-nowrap">{displayValue}</span>
+      <ChevronDown size={12} style={{ opacity: 0.6, flexShrink: 0 }} />
       <select
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        className="absolute inset-0 w-full opacity-0 cursor-pointer"
+        className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
         aria-label={`Filter by ${label}`}
       >
         {options.map((o) => (
