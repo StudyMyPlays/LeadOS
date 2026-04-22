@@ -14,11 +14,11 @@ interface FunnelChartProps {
 }
 
 const DEFAULT_STAGES: FunnelStage[] = [
-  { name: "New Leads",     count: 47, color: "#00F5FF", avgDays: 0  },
-  { name: "Contacted",     count: 31, color: "#4D9FFF", avgDays: 2  },
-  { name: "Estimate Sent", count: 22, color: "#9B59FF", avgDays: 5  },
-  { name: "Negotiating",   count: 16, color: "#FFB800", avgDays: 9  },
-  { name: "Converted",     count: 14, color: "#39FF14", avgDays: 14 },
+  { name: "New",          count: 47, color: "#60a5fa", avgDays: 0  },
+  { name: "Contacted",    count: 31, color: "#4D9FFF", avgDays: 2  },
+  { name: "In Progress",  count: 22, color: "#f59e0b", avgDays: 5  },
+  { name: "Negotiating",  count: 16, color: "#FFB800", avgDays: 9  },
+  { name: "Won",          count: 14, color: "#22c55e", avgDays: 14 },
 ]
 
 // How wide each layer is as a % of the container (top → bottom = wide → narrow)

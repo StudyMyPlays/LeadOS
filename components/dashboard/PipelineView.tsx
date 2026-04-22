@@ -6,11 +6,11 @@ import { Phone, Calendar } from "lucide-react"
 
 // ── Funnel stages (5-step journey) ──────────────────────────────────────────
 const FUNNEL_STAGES = [
-  { name: "New Leads",     count: 47, color: "#00F5FF", avgDays: 0  },
-  { name: "Contacted",     count: 31, color: "#4D9FFF", avgDays: 2  },
-  { name: "Estimate Sent", count: 22, color: "#9B59FF", avgDays: 5  },
-  { name: "Negotiating",   count: 16, color: "#FFB800", avgDays: 9  },
-  { name: "Converted",     count: 14, color: "#39FF14", avgDays: 14 },
+  { name: "New",          count: 47, color: "#60a5fa", avgDays: 0  },
+  { name: "Contacted",    count: 31, color: "#4D9FFF", avgDays: 2  },
+  { name: "In Progress",  count: 22, color: "#f59e0b", avgDays: 5  },
+  { name: "Negotiating",  count: 16, color: "#FFB800", avgDays: 9  },
+  { name: "Won",          count: 14, color: "#22c55e", avgDays: 14 },
 ]
 
 // ── Kanban columns ───────────────────────────────────────────────────────────
@@ -18,7 +18,7 @@ const STAGES = [
   {
     id: "new",
     label: "New",
-    color: "#00F5FF",
+    color: "#60a5fa",
     count: 18,
     value: 12400,
     cards: [
@@ -39,9 +39,9 @@ const STAGES = [
     ],
   },
   {
-    id: "quoted",
-    label: "Quoted",
-    color: "#9B59FF",
+    id: "in-progress",
+    label: "In Progress",
+    color: "#f59e0b",
     count: 8,
     value: 21600,
     cards: [
@@ -50,9 +50,9 @@ const STAGES = [
     ],
   },
   {
-    id: "closed",
-    label: "Closed Won",
-    color: "#39FF14",
+    id: "won",
+    label: "Won",
+    color: "#22c55e",
     count: 5,
     value: 14870,
     cards: [
