@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useCallback, useEffect, useState } from "react"
 import dynamic from "next/dynamic"
 import Sidebar from "./Sidebar"
 import Topbar from "./Topbar"
@@ -9,6 +9,14 @@ import LeadsView from "./LeadsView"
 import PipelineView from "./PipelineView"
 import AnalyticsView from "./AnalyticsView"
 import type { DashboardConfig as AdminConfig } from "@/components/admin/AdminConfigPanel"
+import {
+  type AppNotification,
+  type NotificationType,
+  createNotification,
+  loadNotifications,
+  saveNotifications,
+  NOTIFICATIONS_MAX,
+} from "@/lib/notifications"
 
 const ParticleBackground = dynamic(() => import("./ParticleBackground"), { ssr: false })
 
@@ -25,24 +33,71 @@ const DEFAULT_CONFIG = {
 }
 
 type Section = "dashboard" | "leads" | "pipeline" | "analytics"
+const VALID_SECTIONS: Section[] = ["dashboard", "leads", "pipeline", "analytics"]
+
+function normalizeSection(value: string | undefined): Section {
+  return VALID_SECTIONS.includes(value as Section) ? (value as Section) : "dashboard"
+}
 
 interface DashboardProps {
   role?: "owner" | "partner"
   userEmail?: string
   onLogout?: () => void
   previewConfig?: AdminConfig
+  initialSection?: string
 }
 
-export default function Dashboard({ role = "owner", userEmail, onLogout, previewConfig }: DashboardProps) {
-  const [activeSection, setActiveSection] = useState<Section>("dashboard")
+export default function Dashboard({
+  role = "owner",
+  userEmail,
+  onLogout,
+  previewConfig,
+  initialSection,
+}: DashboardProps) {
+  const [activeSection, setActiveSection] = useState<Section>(() =>
+    normalizeSection(initialSection),
+  )
   const [sidebarExpanded, setSidebarExpanded] = useState(true)
+
+  // ── Notifications (live state, backed by localStorage) ────────────────
+  const [notifications, setNotifications] = useState<AppNotification[]>([])
+
+  // Load persisted notifications on mount.
+  useEffect(() => {
+    setNotifications(loadNotifications())
+  }, [])
+
+  const addNotification = useCallback((type: NotificationType, message: string) => {
+    setNotifications((prev) => {
+      const next = [createNotification(type, message), ...prev].slice(0, NOTIFICATIONS_MAX)
+      saveNotifications(next)
+      return next
+    })
+  }, [])
+
+  const markAllNotificationsRead = useCallback(() => {
+    setNotifications((prev) => {
+      if (prev.every((n) => n.read)) return prev
+      const next = prev.map((n) => ({ ...n, read: true }))
+      saveNotifications(next)
+      return next
+    })
+  }, [])
+
+  const dismissNotification = useCallback((id: string) => {
+    setNotifications((prev) => {
+      const next = prev.filter((n) => n.id !== id)
+      saveNotifications(next)
+      return next
+    })
+  }, [])
 
   const config = previewConfig ?? DEFAULT_CONFIG
 
   const renderSection = () => {
     switch (activeSection) {
       case "dashboard":  return <DashboardView config={config} />
-      case "leads":      return <LeadsView config={config} />
+      case "leads":      return <LeadsView config={config} addNotification={addNotification} />
       case "pipeline":   return <PipelineView config={config} />
       case "analytics":  return <AnalyticsView config={config} />
       default:           return <DashboardView config={config} />
@@ -79,6 +134,9 @@ export default function Dashboard({ role = "owner", userEmail, onLogout, preview
             userEmail={userEmail}
             sidebarExpanded={sidebarExpanded}
             onToggleSidebar={() => setSidebarExpanded((v) => !v)}
+            notifications={notifications}
+            onMarkAllRead={markAllNotificationsRead}
+            onDismiss={dismissNotification}
           />
 
           <main className="flex-1 overflow-y-auto p-5 md:p-6">

@@ -1,7 +1,12 @@
 "use client"
 
-import { useEffect, useRef, useState } from "react"
+import { useEffect, useMemo, useRef, useState } from "react"
 import { Bell, Search, PanelLeft, PanelLeftClose, X, Check } from "lucide-react"
+import {
+  type AppNotification,
+  type NotificationType,
+  formatRelative,
+} from "@/lib/notifications"
 
 interface TopbarProps {
   activeSection: string
@@ -11,6 +16,9 @@ interface TopbarProps {
   userEmail?: string
   sidebarExpanded: boolean
   onToggleSidebar: () => void
+  notifications: AppNotification[]
+  onMarkAllRead: () => void
+  onDismiss: (id: string) => void
 }
 
 const SECTION_LABELS: Record<string, string> = {
@@ -20,37 +28,66 @@ const SECTION_LABELS: Record<string, string> = {
   analytics: "Analytics",
 }
 
-interface Notification {
-  id: string
-  title: string
-  body: string
-  time: string
-  unread: boolean
+// Per-type dot / accent colors for the notification list.
+const TYPE_STYLES: Record<
+  NotificationType,
+  { dot: string; glow: string; label: string; labelColor: string; labelBg: string; labelBorder: string }
+> = {
+  lead: {
+    dot: "#10b981",
+    glow: "rgba(16,185,129,0.6)",
+    label: "New Lead",
+    labelColor: "#34d399",
+    labelBg: "rgba(16,185,129,0.10)",
+    labelBorder: "rgba(16,185,129,0.28)",
+  },
+  status: {
+    dot: "#3b82f6",
+    glow: "rgba(59,130,246,0.6)",
+    label: "Status",
+    labelColor: "#93c5fd",
+    labelBg: "rgba(59,130,246,0.10)",
+    labelBorder: "rgba(59,130,246,0.28)",
+  },
+  warning: {
+    dot: "#f59e0b",
+    glow: "rgba(245,158,11,0.6)",
+    label: "Removed",
+    labelColor: "#fbbf24",
+    labelBg: "rgba(245,158,11,0.10)",
+    labelBorder: "rgba(245,158,11,0.28)",
+  },
+  info: {
+    dot: "rgba(200,205,216,0.5)",
+    glow: "rgba(200,205,216,0.35)",
+    label: "Info",
+    labelColor: "rgba(200,205,216,0.7)",
+    labelBg: "rgba(255,255,255,0.04)",
+    labelBorder: "rgba(255,255,255,0.08)",
+  },
 }
-
-const SAMPLE_NOTIFICATIONS: Notification[] = [
-  { id: "n1", title: "New lead assigned",    body: "Robert Martinez (Installation — New York)", time: "2m ago",  unread: true },
-  { id: "n2", title: "Estimate accepted",    body: "Emily Thompson accepted a $1,640 estimate.", time: "1h ago",  unread: true },
-  { id: "n3", title: "Routing rule updated", body: "\"Austin installations — Elena\" re-ordered to #1.", time: "4h ago", unread: false },
-  { id: "n4", title: "Partner invited",      body: "alex.cho@growthpartners.io accepted their invite.", time: "1d ago", unread: false },
-]
 
 export default function Topbar({
   activeSection,
   clientName,
   sidebarExpanded,
   onToggleSidebar,
+  notifications,
+  onMarkAllRead,
+  onDismiss,
 }: TopbarProps) {
-  const [searchOpen, setSearchOpen]     = useState(false)
-  const [searchQuery, setSearchQuery]   = useState("")
-  const [notifOpen, setNotifOpen]       = useState(false)
-  const [notifications, setNotifications] = useState<Notification[]>(SAMPLE_NOTIFICATIONS)
+  const [searchOpen, setSearchOpen]   = useState(false)
+  const [searchQuery, setSearchQuery] = useState("")
+  const [notifOpen, setNotifOpen]     = useState(false)
 
   const searchInputRef = useRef<HTMLInputElement>(null)
   const notifWrapRef   = useRef<HTMLDivElement>(null)
   const searchWrapRef  = useRef<HTMLDivElement>(null)
 
-  const unreadCount = notifications.filter((n) => n.unread).length
+  const unreadCount = useMemo(
+    () => notifications.filter((n) => !n.read).length,
+    [notifications],
+  )
 
   // Focus search input when opened
   useEffect(() => {
@@ -92,12 +129,6 @@ export default function Topbar({
     window.addEventListener("keydown", onKey)
     return () => window.removeEventListener("keydown", onKey)
   }, [searchQuery])
-
-  const markAllRead = () =>
-    setNotifications((prev) => prev.map((n) => ({ ...n, unread: false })))
-
-  const dismiss = (id: string) =>
-    setNotifications((prev) => prev.filter((n) => n.id !== id))
 
   return (
     <header
@@ -278,7 +309,7 @@ export default function Topbar({
                 {unreadCount > 0 && (
                   <button
                     type="button"
-                    onClick={markAllRead}
+                    onClick={onMarkAllRead}
                     className="flex items-center gap-1 text-[11px] font-mono"
                     style={{
                       color: "#93c5fd",
@@ -303,50 +334,66 @@ export default function Topbar({
                     No notifications yet
                   </div>
                 ) : (
-                  notifications.map((n) => (
-                    <div
-                      key={n.id}
-                      className="group flex items-start gap-3 px-3 py-2.5 transition-colors"
-                      style={{
-                        borderBottom: "1px solid rgba(255,255,255,0.04)",
-                        background: n.unread ? "rgba(59,130,246,0.04)" : "transparent",
-                      }}
-                    >
-                      <span
-                        className="mt-1.5 w-1.5 h-1.5 rounded-full flex-shrink-0"
+                  notifications.map((n) => {
+                    const style = TYPE_STYLES[n.type] ?? TYPE_STYLES.info
+                    return (
+                      <div
+                        key={n.id}
+                        className="group flex items-start gap-3 px-3 py-2.5 transition-colors"
                         style={{
-                          background: n.unread ? "#3b82f6" : "transparent",
-                          boxShadow: n.unread ? "0 0 6px rgba(59,130,246,0.6)" : "none",
+                          borderBottom: "1px solid rgba(255,255,255,0.04)",
+                          background: !n.read ? "rgba(59,130,246,0.04)" : "transparent",
                         }}
-                      />
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center justify-between gap-2">
-                          <p className="text-xs font-semibold font-sans truncate" style={{ color: "#e2e8f0" }}>
-                            {n.title}
-                          </p>
-                          <span className="text-[10px] font-mono flex-shrink-0" style={{ color: "rgba(200,205,216,0.35)" }}>
-                            {n.time}
-                          </span>
-                        </div>
-                        <p className="text-xs font-sans mt-0.5 line-clamp-2" style={{ color: "rgba(200,205,216,0.55)" }}>
-                          {n.body}
-                        </p>
-                      </div>
-                      <button
-                        type="button"
-                        onClick={() => dismiss(n.id)}
-                        className="opacity-0 group-hover:opacity-100 flex items-center justify-center w-5 h-5 rounded transition-opacity flex-shrink-0"
-                        style={{
-                          background: "rgba(255,255,255,0.04)",
-                          border: "1px solid rgba(255,255,255,0.06)",
-                          color: "rgba(200,205,216,0.45)",
-                        }}
-                        aria-label="Dismiss"
                       >
-                        <X size={10} />
-                      </button>
-                    </div>
-                  ))
+                        <span
+                          className="mt-1.5 w-1.5 h-1.5 rounded-full flex-shrink-0"
+                          style={{
+                            background: !n.read ? style.dot : "transparent",
+                            boxShadow: !n.read ? `0 0 6px ${style.glow}` : "none",
+                          }}
+                        />
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center justify-between gap-2">
+                            <span
+                              className="text-[9px] font-mono uppercase tracking-wider px-1.5 py-0.5 rounded flex-shrink-0"
+                              style={{
+                                background: style.labelBg,
+                                color: style.labelColor,
+                                border: `1px solid ${style.labelBorder}`,
+                              }}
+                            >
+                              {style.label}
+                            </span>
+                            <span
+                              className="text-[10px] font-mono flex-shrink-0"
+                              style={{ color: "rgba(200,205,216,0.35)" }}
+                            >
+                              {formatRelative(n.timestamp)}
+                            </span>
+                          </div>
+                          <p
+                            className="text-xs font-sans mt-1 line-clamp-2"
+                            style={{ color: !n.read ? "#e2e8f0" : "rgba(200,205,216,0.65)" }}
+                          >
+                            {n.message}
+                          </p>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => onDismiss(n.id)}
+                          className="opacity-0 group-hover:opacity-100 flex items-center justify-center w-5 h-5 rounded transition-opacity flex-shrink-0"
+                          style={{
+                            background: "rgba(255,255,255,0.04)",
+                            border: "1px solid rgba(255,255,255,0.06)",
+                            color: "rgba(200,205,216,0.45)",
+                          }}
+                          aria-label="Dismiss"
+                        >
+                          <X size={10} />
+                        </button>
+                      </div>
+                    )
+                  })
                 )}
               </div>
 

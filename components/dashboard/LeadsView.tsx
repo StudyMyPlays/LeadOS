@@ -9,6 +9,7 @@ import LeadDrawer from "./LeadDrawer"
 import AddLeadModal from "./AddLeadModal"
 import FunnelKPIs from "./FunnelKPIs"
 import { Lead, SAMPLE_LEADS, STATUS_CONFIG } from "./leads-data"
+import type { NotificationType } from "@/lib/notifications"
 
 interface LeadsViewProps {
   config: {
@@ -18,9 +19,10 @@ interface LeadsViewProps {
     cities: string[]
   }
   leads?: Lead[]
+  addNotification?: (type: NotificationType, message: string) => void
 }
 
-export default function LeadsView({ config, leads = SAMPLE_LEADS }: LeadsViewProps) {
+export default function LeadsView({ config, leads = SAMPLE_LEADS, addNotification }: LeadsViewProps) {
   const [allLeads, setAllLeads]         = useState<Lead[]>(leads)
   const [selectedLead, setSelectedLead] = useState<Lead | null>(null)
   const [modalOpen, setModalOpen]       = useState(false)
@@ -81,16 +83,36 @@ export default function LeadsView({ config, leads = SAMPLE_LEADS }: LeadsViewPro
       ],
     }
     setAllLeads((prev) => [newLead, ...prev])
+    addNotification?.(
+      "lead",
+      `New lead: ${newLead.name} (${newLead.service || "—"}) added`,
+    )
   }
 
   const handleUpdateLead = (updated: Lead) => {
-    setAllLeads((prev) => prev.map((l) => (l.id === updated.id ? updated : l)))
+    setAllLeads((prev) => {
+      const existing = prev.find((l) => l.id === updated.id)
+      if (existing && existing.status !== updated.status) {
+        addNotification?.(
+          "status",
+          `${updated.name} moved to ${updated.status}`,
+        )
+      }
+      return prev.map((l) => (l.id === updated.id ? updated : l))
+    })
     setSelectedLead(updated)
   }
 
   const handleDeleteLead = (id: number) => {
+    const removed = allLeads.find((l) => l.id === id)
     setAllLeads((prev) => prev.filter((l) => l.id !== id))
     setSelectedLead(null)
+    if (removed) {
+      addNotification?.(
+        "warning",
+        `${removed.name} was removed from pipeline`,
+      )
+    }
   }
 
   // ── CSV export ──────────────────────────────────────────────────
