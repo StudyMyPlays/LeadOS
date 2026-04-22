@@ -1,9 +1,10 @@
 "use client"
 
 import Link from "next/link"
+import { usePathname } from "next/navigation"
+import { useCallback } from "react"
 import {
   LayoutGrid,
-  List,
   Filter,
   BarChart2,
   Settings,
@@ -25,8 +26,7 @@ interface SidebarProps {
 }
 
 const NAV_ITEMS = [
-  { id: "dashboard", label: "Dashboard", icon: LayoutGrid },
-  { id: "leads",     label: "All Leads", icon: List },
+  { id: "dashboard", label: "Leads",     icon: LayoutGrid },
   { id: "pipeline",  label: "Pipeline",  icon: Filter },
   { id: "analytics", label: "Analytics", icon: BarChart2 },
 ]
@@ -38,6 +38,7 @@ const ADMIN_ITEMS = [
   { href: "/admin/config",        label: "Settings",        icon: Settings },
 ]
 
+const ACTIVE_SECTION_KEY = "leadosActiveSection"
 const EXPANDED_W  = 220
 const COLLAPSED_W = 64
 
@@ -50,8 +51,21 @@ export default function Sidebar({
   onLogout,
   expanded,
 }: SidebarProps) {
-
+  const pathname = usePathname() ?? "/"
   const isAdmin = role === "owner"
+  const isOnDashboard = pathname === "/"
+
+  // When the user clicks an admin link from the main dashboard, persist the
+  // current workspace section so `/?returnTo=admin` can restore it later.
+  const handleAdminLinkClick = useCallback(() => {
+    if (typeof window === "undefined") return
+    if (!isOnDashboard || !activeSection) return
+    try {
+      window.sessionStorage.setItem(ACTIVE_SECTION_KEY, activeSection)
+    } catch {
+      // ignore
+    }
+  }, [activeSection, isOnDashboard])
 
   return (
     <aside
@@ -100,7 +114,8 @@ export default function Sidebar({
         {/* Workspace nav */}
         <nav className={cn("flex flex-col gap-0.5", expanded ? "p-2" : "px-2 py-2")}>
           {NAV_ITEMS.map(({ id, label, icon: Icon }) => {
-            const isActive = activeSection === id
+            // Workspace items can only be "active" while sitting on the main dashboard.
+            const isActive = isOnDashboard && activeSection === id
             return (
               <button
                 key={id}
@@ -172,33 +187,54 @@ export default function Sidebar({
             )}
 
             <div className="flex flex-col gap-0.5">
-              {ADMIN_ITEMS.map(({ href, label, icon: Icon }) => (
-                <Link
-                  key={href}
-                  href={href}
-                  className={cn(
-                    "nav-item flex items-center rounded-lg w-full",
-                    expanded
-                      ? "gap-3 px-2 py-2.5 justify-start"
-                      : "justify-center px-0 py-2.5",
-                  )}
-                  style={{
-                    color: "rgba(200,205,216,0.55)",
-                    minHeight: 40,
-                  }}
-                  title={!expanded ? label : undefined}
-                  aria-label={label}
-                >
-                  <Icon
-                    size={17}
-                    className="flex-shrink-0"
-                    style={{ color: "rgba(16,185,129,0.65)" }}
-                  />
-                  {expanded && (
-                    <span className="text-sm font-medium font-sans truncate">{label}</span>
-                  )}
-                </Link>
-              ))}
+              {ADMIN_ITEMS.map(({ href, label, icon: Icon }) => {
+                const isActive = pathname === href || pathname.startsWith(href + "/")
+                return (
+                  <Link
+                    key={href}
+                    href={href}
+                    onClick={handleAdminLinkClick}
+                    className={cn(
+                      "nav-item flex items-center rounded-lg w-full transition-colors",
+                      expanded
+                        ? "gap-3 px-2 py-2.5 justify-start"
+                        : "justify-center px-0 py-2.5",
+                    )}
+                    style={{
+                      color: isActive ? "#34d399" : "rgba(200,205,216,0.55)",
+                      background: isActive ? "rgba(16,185,129,0.08)" : "transparent",
+                      border: isActive
+                        ? "1px solid rgba(16,185,129,0.32)"
+                        : "1px solid transparent",
+                      boxShadow: isActive
+                        ? "inset 0 0 0 1px rgba(16,185,129,0.10), 0 0 14px rgba(16,185,129,0.14)"
+                        : "none",
+                      minHeight: 40,
+                    }}
+                    title={!expanded ? label : undefined}
+                    aria-label={label}
+                    aria-current={isActive ? "page" : undefined}
+                  >
+                    <Icon
+                      size={17}
+                      className="flex-shrink-0"
+                      style={{ color: isActive ? "#34d399" : "rgba(16,185,129,0.65)" }}
+                    />
+                    {expanded && (
+                      <span className="text-sm font-medium font-sans truncate">{label}</span>
+                    )}
+                    {expanded && isActive && (
+                      <span
+                        className="ml-auto w-1 h-4 rounded-full flex-shrink-0"
+                        style={{
+                          background: "#10b981",
+                          boxShadow: "0 0 6px rgba(16,185,129,0.6)",
+                        }}
+                      />
+                    )}
+                  </Link>
+                )
+              })}
             </div>
           </div>
         )}
