@@ -219,28 +219,35 @@ export default function LeadsTable({
             }}
             aria-label="Clear all filters"
             title="Clear all filters"
-            className="toolbar-icon-btn flex items-center justify-center w-9 h-9"
+            className="toolbar-icon-btn flex flex-shrink-0 items-center justify-center w-9 h-9"
           >
             <X size={13} style={{ color: "#f87171" }} />
           </button>
         )}
 
-        {/* Counter pushed to the far right, paired with the primary CTA */}
-        <div
-          className="ml-auto text-[11px] font-mono whitespace-nowrap hidden md:block"
-          style={{ color: "rgba(212,216,224,0.4)" }}
-        >
-          {sorted.length} lead{sorted.length !== 1 ? "s" : ""}
-        </div>
+        {/*
+          Right-aligned cluster: count + CTA travel together.
+          ml-auto lives on this wrapper (not the count) so when the count is
+          hidden on mobile, the CTA still hugs the right edge instead of
+          collapsing into the filter row or wrapping alone on its own line.
+        */}
+        <div className="ml-auto flex items-center gap-2 flex-shrink-0">
+          <div
+            className="text-[11px] font-mono whitespace-nowrap hidden md:block"
+            style={{ color: "rgba(212,216,224,0.4)" }}
+          >
+            {sorted.length} lead{sorted.length !== 1 ? "s" : ""}
+          </div>
 
-        {/* Add New Lead — solid primary CTA */}
-        <button
-          onClick={onAddLead}
-          className="toolbar-primary-btn flex items-center gap-1.5 h-9 px-4 text-[13px] font-semibold font-sans"
-        >
-          <Plus size={14} strokeWidth={2.5} />
-          Add New Lead
-        </button>
+          {/* Add New Lead — solid primary CTA */}
+          <button
+            onClick={onAddLead}
+            className="toolbar-primary-btn flex flex-shrink-0 items-center gap-1.5 h-9 px-4 text-[13px] font-semibold font-sans whitespace-nowrap"
+          >
+            <Plus size={14} strokeWidth={2.5} />
+            Add New Lead
+          </button>
+        </div>
       </div>
 
       {/* ── Table panel ───────────────────────────────────────── */}
@@ -322,7 +329,7 @@ function FilterSelect({
   const displayValue = value === "All" ? label : (labelMap?.[value] ?? value)
   return (
     <div
-      className="toolbar-pill relative flex items-center gap-2 pl-3 pr-2.5 h-9 cursor-pointer"
+      className="toolbar-pill relative flex flex-shrink-0 items-center gap-2 pl-3 pr-2.5 h-9 cursor-pointer"
       data-active={isActive ? "true" : "false"}
       style={{
         color: isActive ? "#93c5fd" : "rgba(212,216,224,0.7)",
@@ -435,12 +442,14 @@ function LeadRow({
       {/* Service */}
       <td className="px-4 py-3" style={{ minWidth: 130 }}>
         <span
-          className="inline-block px-2 py-0.5 rounded-md text-xs font-mono"
+          className="inline-block px-2 py-0.5 rounded-md text-xs font-mono truncate align-middle"
           style={{
             background: `${svc}14`,
             border: `1px solid ${svc}30`,
             color: svc,
+            maxWidth: 140,
           }}
+          title={lead.service}
         >
           {lead.service}
         </span>
@@ -554,12 +563,18 @@ function LeadRow({
 }
 
 function Avatar({ name }: { name: string }) {
-  const initials = name
-    .split(" ")
-    .filter(Boolean)
-    .slice(0, 2)
-    .map((p) => p[0]?.toUpperCase() ?? "")
-    .join("")
+  // Always produce at least two characters so single-word names
+  // (e.g. "Madonna") still render a proper glyph instead of a single letter.
+  const parts = (name ?? "").trim().split(/\s+/).filter(Boolean)
+  let initials: string
+  if (parts.length === 0) {
+    initials = "??"
+  } else if (parts.length === 1) {
+    const w = parts[0]
+    initials = (w.length >= 2 ? w.slice(0, 2) : w + w).toUpperCase()
+  } else {
+    initials = (parts[0][0] + parts[1][0]).toUpperCase()
+  }
 
   let h = 0
   for (let i = 0; i < name.length; i++) h = (h * 31 + name.charCodeAt(i)) | 0
